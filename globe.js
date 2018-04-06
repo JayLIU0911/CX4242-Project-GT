@@ -31,8 +31,8 @@ var countryTooltip = d3.select("body").append("div").attr("class", "countryToolt
 var title = d3.select("h1");
 
 queue()
-.defer(d3.json, "world-110m.json")
-.defer(d3.tsv, "world-110m-country-names.tsv")
+.defer(d3.json, "data/world-110m.json")
+.defer(d3.tsv, "data/world-110m-country-names.tsv")
 .defer(d3.csv, "data/tubercolusis_from 2007_WHO.csv")
 .await(ready);
 
