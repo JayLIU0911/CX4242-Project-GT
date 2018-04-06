@@ -4,7 +4,8 @@ var margin = { top: 20, right: 20, bottom: 20, left: 20 },
     width = w - margin.left - margin.right,
     height = h - margin.top - margin.bottom,
     sens = 0.25,
-    focused;
+    focused,
+    colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"];
 
 //Setting projection
 
@@ -41,7 +42,9 @@ queue()
 function ready(error, world, countryData, data) {
 
   if (error) throw error;
-console.log(data['countries'])
+
+  var countryInfo = Object.values(data['countries'])
+
   var countryById = {},
       countries = topojson.feature(world, world.objects.countries).features
       i = -1
@@ -66,21 +69,32 @@ console.log(data['countries'])
   });
 
   // Setting country information
-  // countries = countries.filter(function(d) {
-  //   return data['countries'].some(function(n) {
-  //     if (d.id == n.id) return d.years = n.years;
-  //   });
-  // }).sort(function(a, b) {
-  //   return a.name.localeCompare(b.name);
-  // });
+  countries = countries.filter(function(d) {
+    return countryInfo.some(function(n) {
+      if (d.id == n.id) return d.years = n.years;
+    });
+  }).sort(function(a, b) {
+    return a.name.localeCompare(b.name);
+  });
 
+  console.log(countries[0]['years']['2010']["Number of deaths due to tuberculosis, excluding HIV"]);
+
+  //Setting color scale
+  var colorScale = d3.scale.quantile()
+                     .domain([0, 11, d3.max(countries, function(d){
+                      return d['years']['2011']["Number of deaths due to tuberculosis, excluding HIV"];})])
+                     .range(colors);
+  
   //Drawing countries on the globe
-
   var world = svg.selectAll("path.land")
                  .data(countries)
                  .enter().append("path")
                  .attr("class", "land")
                  .attr("d", path)
+                 .style("fill", function(d){
+                  // console.log(d['years']['2011']["Number of deaths due to tuberculosis, excluding HIV"]);
+                  return colorScale(d['years']['2011']["Number of deaths due to tuberculosis, excluding HIV"]);
+                 })
 
   //Drag event
 
@@ -180,7 +194,7 @@ console.log(data['countries'])
       .each("end", transition);
   };
 
-  transition();
+  // transition();
 
   function country(cnt, sel) { 
     for(var i = 0, l = cnt.length; i < l; i++) {
