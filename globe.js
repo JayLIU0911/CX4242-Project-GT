@@ -120,7 +120,7 @@ function ready(error, world, countryData, data) {
           return function(t) {
             projection.rotate(r(t));
             svg.selectAll("path").attr("d", path)
-               .classed("focused", function(d, i) { console.log(d);return d.id == focusedCountry.id ? focused = d : false; });
+               .classed("focused", function(d, i) { return d.id == focusedCountry.id ? focused = d : false; });
           };
         })
     };
