@@ -2,93 +2,126 @@
 
 <head>
   <meta charset="utf-8" />
-  <!-- <script src="lib/d3.min.js" type="text/JavaScript"></script> -->
   <script src="https://d3js.org/d3.v3.js"></script>
   <script src="http://d3js.org/topojson.v1.min.js"></script>
   <script src="http://d3js.org/queue.v1.min.js"></script>
 </head>
 
+<style>
+  h1 {
+    position: absolute;
+    top: 350px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    text-align: center;
+    width: 600px;
+  }
+</style>
+<h1></h1>
 <body>
+  <script type="text/javascript">
+
+    var width = 600,
+        height = 600;
+
+    // gird or structure of the globe
+    var graticule = d3.geo.graticule();
+
+    var backGrid = graticule();
+    var grid = graticule();
+
+    var globe = {type: "Sphere"};
+
+    var projection = d3.geo.orthographic()
+                       .scale(height / 2.1)
+                       .translate([width / 2, height / 2])
+                       .precision(0.6);
+
+    var thresholds = [10000, 11000, 12000, 13000, 14000, 15000],
+        colors = ["#ffffd4","#fee391","#fec44f","#fe9929","#ec7014","#cc4c02","#8c2d04"],
+        colorScale = d3.scale.threshold().domain(thresholds).range(colors);
+
+    var canvas = d3.select("body").append("canvas")
+                   .attr("width", width)
+                   .attr("height", height);
+
+    var c = canvas.node().getContext("2d");
+
+    var path = d3.geo.path()
+                 .projection(projection)
+                 .context(c);
+
+    var title = d3.select("h1");
+
+    queue()
+        .defer(d3.json, "world-110m.json")
+        .defer(d3.tsv, "world-110m-country-names.tsv")
+        .defer(d3.csv, "data/tubercolusis_from 2007_WHO.csv")
+        .await(ready);
+
+    function ready(error, world, names, data) {
+      if (error) throw error;
+
+      var land = topojson.feature(world, world.objects.land),
+          countries = topojson.feature(world, world.objects.countries).features,
+          borders = topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }),
+          i = -1,
+          n = countries.length;
+
+      // set country names
+      countries = countries.filter(function(d) {
+        return names.some(function(n) {
+          if (d.id == n.id) return d.name = n.name;
+        });
+      }).sort(function(a, b) {
+        return a.name.localeCompare(b.name);
+      });
+
+      console.log(countries)
+      console.log(data)
+
+      function transition() {
+        d3.transition()
+          .duration(1250)
+          .each("start", function() {
+            title.text(countries[i = (i + 1) % n].name);
+          })
+          .tween("rotate", function() {
+            var p = d3.geo.centroid(countries[i]),
+                r = d3.interpolate(projection.rotate(), [-p[0], -p[1]]);
+            return function(t) {
+              c.clearRect(0, 0, width, height);
+
+              projection.rotate(r(t)).clipAngle(180);
+              c.fillStyle = "#dadac4", c.beginPath(), path(land), c.fill();
+              c.fillStyle = "#f00", c.beginPath(), path(countries[i]), c.fill();
+              c.strokeStyle = "#fff", c.lineWidth = .5, c.beginPath(), path(borders), c.stroke();
+              c.strokeStyle = "#000", c.lineWidth = 1, c.beginPath(), path(globe), c.stroke();
+              c.strokeStyle = "rgba(0, 0, 0, 0.05)", c.lineWidth = .5, c.beginPath(), path(backGrid), c.stroke();
+
+              console.log(+data[i]["Number of deaths due to tuberculosis, excluding HIV"].replace(/\s/g, ''))
+
+              projection.rotate(r(t)).clipAngle(90);
+              c.fillStyle = "#737368", c.beginPath(), path(land), c.fill();
+              c.fillStyle = "#f00", c.beginPath(), path(countries[i]), c.fill();
+              c.fillStyle = colorScale(+data[i]["Number of deaths due to tuberculosis, excluding HIV"].replace(/\s/g, '')), c.beginPath(), path(countries[i]), c.fill();
+              c.strokeStyle = "#fff", c.lineWidth = .5, c.beginPath(), path(borders), c.stroke();
+              c.strokeStyle = "rgba(0, 0, 0, 0.1)", c.lineWidth = 1, c.beginPath(), path(globe), c.stroke();
+              c.strokeStyle = "rgba(0, 0, 0, 0.1)", c.lineWidth = .5, c.beginPath(), path(grid), c.stroke();
+            };
+          })
+          .transition()
+          .each("end", transition);
+      }
+
+      transition();
+    };
+
+    d3.select(self.frameElement).style("height", height + "px");
+
+
+  </script>
 </body>
 
-<script type="text/javascript">
-var width = 500,
-    height = 500;
-
-var graticule = d3.geo.graticule();
-
-var backGrid = graticule();
-var grid = graticule();
-
-var globe = {type: "Sphere"};
-
-var projection = d3.geo.orthographic()
-    .scale(height / 2.1)
-    .translate([width / 2, height / 2])
-    .precision(0.6);
-
-var canvas = d3.select("body").append("canvas")
-    .attr("width", width)
-    .attr("height", height);
-
-var c = canvas.node().getContext("2d");
-
-var path = d3.geo.path()
-    .projection(projection)
-    .context(c);
-
-var title = d3.select("h1");
-
-queue()
-    .defer(d3.json, "world-110m.json")
-    .defer(d3.csv, "data/tubercolusis_from 2007_WHO.csv")
-    .await(ready);
-
-function ready(error, world, data) {
-  if (error) throw error;
-
-  var land = topojson.feature(world, world.objects.land),
-      countries = topojson.feature(world, world.objects.countries).features,
-      borders = topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }),
-      i = -1,
-      n = countries.length;
-
-  console.log(data);
-
-  (function transition() {
-    d3.transition()
-        .duration(1250)
-        .each("start", function() {
-          title.text(countries[i = (i + 1) % n].name);
-        })
-        .tween("rotate", function() {
-          var p = d3.geo.centroid(countries[i]),
-              r = d3.interpolate(projection.rotate(), [-p[0], -p[1]]);
-          return function(t) {
-            c.clearRect(0, 0, width, height);
-
-            projection.rotate(r(t)).clipAngle(180);
-            c.fillStyle = "#dadac4", c.beginPath(), path(land), c.fill();
-            // c.fillStyle = "#f00", c.beginPath(), path(countries[i]), c.fill();
-            c.strokeStyle = "#fff", c.lineWidth = .5, c.beginPath(), path(borders), c.stroke();
-            c.strokeStyle = "#000", c.lineWidth = 1, c.beginPath(), path(globe), c.stroke();
-            c.strokeStyle = "rgba(0, 0, 0, 0.05)", c.lineWidth = .5, c.beginPath(), path(backGrid), c.stroke();
-
-            projection.rotate(r(t)).clipAngle(90);
-            c.fillStyle = "#737368", c.beginPath(), path(land), c.fill();
-            c.fillStyle = "#f00", c.beginPath(), path(countries[i]), c.fill();
-            c.strokeStyle = "#fff", c.lineWidth = .5, c.beginPath(), path(borders), c.stroke();
-            c.strokeStyle = "rgba(0, 0, 0, 0.1)", c.lineWidth = 1, c.beginPath(), path(globe), c.stroke();
-            c.strokeStyle = "rgba(0, 0, 0, 0.1)", c.lineWidth = .5, c.beginPath(), path(grid), c.stroke();
-          };
-        })
-      .transition()
-        .each("end", transition);
-  })();
-};
-
-d3.select(self.frameElement).style("height", height + "px");
-
-</script>
 
 </html>
