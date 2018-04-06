@@ -33,7 +33,7 @@ var title = d3.select("h1");
 queue()
 .defer(d3.json, "data/world-110m.json")
 .defer(d3.tsv, "data/world-110m-country-names.tsv")
-.defer(d3.csv, "data/tubercolusis_from 2007_WHO.csv")
+.defer(d3.json, "data/tubercolusis_from 2007_WHO.json")
 .await(ready);
 
 //Main function
@@ -41,7 +41,7 @@ queue()
 function ready(error, world, countryData, data) {
 
   if (error) throw error;
-
+console.log(data['countries'])
   var countryById = {},
       countries = topojson.feature(world, world.objects.countries).features
       i = -1
@@ -56,7 +56,7 @@ function ready(error, world, countryData, data) {
     option.property("value", d.id);
   });
 
-  //Setring country names
+  //Setting country names
   countries = countries.filter(function(d) {
     return countryData.some(function(n) {
       if (d.id == n.id) return d.name = n.name;
@@ -64,6 +64,15 @@ function ready(error, world, countryData, data) {
   }).sort(function(a, b) {
     return a.name.localeCompare(b.name);
   });
+
+  // Setting country information
+  // countries = countries.filter(function(d) {
+  //   return data['countries'].some(function(n) {
+  //     if (d.id == n.id) return d.years = n.years;
+  //   });
+  // }).sort(function(a, b) {
+  //   return a.name.localeCompare(b.name);
+  // });
 
   //Drawing countries on the globe
 
