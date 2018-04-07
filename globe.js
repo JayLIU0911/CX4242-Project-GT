@@ -91,10 +91,10 @@ function ready(error, world, countryData, data) {
                  .enter().append("path")
                  .attr("class", "land")
                  .attr("d", path)
-                 .style("fill", function(d){
-                  // console.log(d['years']['2011']["Number of deaths due to tuberculosis, excluding HIV"]);
-                  return colorScale(d['years']['2011']["Number of deaths due to tuberculosis, excluding HIV"]);
-                 })
+                 // .style("fill", function(d){
+                 //  // console.log(d['years']['2011']["Number of deaths due to tuberculosis, excluding HIV"]);
+                 //  return colorScale(d['years']['2011']["Number of deaths due to tuberculosis, excluding HIV"]);
+                 // })
 
   //Drag event
 
