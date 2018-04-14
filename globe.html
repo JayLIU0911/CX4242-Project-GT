@@ -1,17 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Earth Globe</title>
-    <script src="http://d3js.org/d3.v3.min.js"></script>
-    <script src="http://d3js.org/topojson.v1.min.js"></script>
-    <script src="http://d3js.org/queue.v1.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="globe.css">
-  </head>
+<head>
+  <title>Earth Globe</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" type="text/css" href="globe.css">
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="http://d3js.org/topojson.v1.min.js"></script>
+  <script src="http://d3js.org/queue.v1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js"></script>
+</head>
 
-  <h1></h1>
-  
-  <body>
-    <script src="globe.js"></script>
-  </body>
+<h1></h1>
+
+<body>
+  <div class="container">
+    <!-- <div class="title"><span data-sr="enter top over 2s and move 30px">t-SNE.js </span><span class="github" data-sr="enter top over 2s and move 30px">[<a href="https://github.com/scienceai/tsne-js">code</a>]</span><br><span class="subtitle" data-sr="enter bottom over 2s and move 10px">example with Edx (video data)</span></div> -->
+    <div class="panel">
+      <div id="control-panel" data-sr="enter left over 3s">
+        <div class="param">
+          <label for="param-dataset">Dataset</label>
+          <select id="param-dataset" name="param-dataset">
+            <option value="0" selected>tubercolusis_from 2007_WHO</option>
+          </select>
+          <output for="param-dataset" id="param-dataset-value"></output>
+        </div>
+        <div class="param">
+          <label for="param-attribute">Attribute</label>
+          <select id="param-attribute" name="param-attribute"></select>
+          <output for="param-attribute" id="param-attribute-value"></output>
+        </div>
+        <!-- <div class="param">
+          <label for="param-country">Country</label>
+          <select id="param-country" name="param-country"></select>
+          <output for="param-country" id="param-country-value"></output>
+        </div> -->
+        <div class="param">
+          <label for="param-year">Year</label>
+          <input id="param-year" type="range" min="2007" max="2014" value="2007", step="1">
+          <output for="param-year" id="param-year-value">2007</output>
+        </div>
+        <!-- <div class="param">
+          <label for="param-speed">Run Speed</label>
+          <input id="param-speed" type="range" min="1" max="10" value="5", step="1">
+          <output for="param-speed" id="param-speed-value">5</output>
+        </div> -->
+
+        <div id="load-button">Load Dataset</div>
+        <div id="visualize-button">Visualize</div>
+        <div id="run-button">Run Timeline</div>
+
+      </div>
+      <div id="embedding-space" data-sr="fade in over 5s"></div>
+    </div>
+  </div>
+</body>
+<script src="globe.js"></script>
 </html>
