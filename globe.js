@@ -151,19 +151,6 @@ function visualize() {
   var year = $('#param-year').val();
   // console.log(year, attribute);
 
-  //Setting color scale
-  // colorScale = d3.scale.quantile()
-  //                .domain([0, 11, d3.max(countries, function(d){
-  //                   //  console.log(Object.keys(d['years']));
-  //                   var years = [];
-  //                   for (var i = 2007; i <= 2014; i++) {
-  //                     if (Object.keys(d['years']).indexOf(String(i)) >= 0)
-  //                       years.push(d['years'][String(i)][attribute]);
-  //                   }
-  //                   return Math.max(years);
-  //                })])
-  //                .range(colors);
-
   colorScale = d3.scale.quantile()
                  .domain([0, 11, d3.max(countries, function(d){
                   //  console.log(Object.keys(d['years']));
@@ -242,7 +229,7 @@ function run() {
   var attribute = $('#param-attribute').val();
   var speed = parseInt($('#param-speed').val());
 
-  //Setting color scale
+  // Setting color scale
   // colorScale = d3.scale.quantile()
   //                .domain([0, 11, d3.max(countries, function(d){
   //                   //  console.log(Object.keys(d['years']));
@@ -254,6 +241,19 @@ function run() {
   //                   return Math.max(years);
   //                })])
   //                .range(colors);
+
+  //Setting color scale
+  colorScale = d3.scale.quantile()
+                 .domain([0, 11, d3.max(countries, function(d){
+                    //  console.log(Object.keys(d['years']));
+                    var years = [];
+                    for (var i = 2007; i <= 2014; i++) {
+                      if (Object.keys(d['years']).indexOf(String(i)) >= 0)
+                        years.push(d['years'][String(i)][attribute]);
+                    }
+                    return Math.max(years);
+                 })])
+                 .range(colors);
 
   svg.selectAll("path")
     .transition()
