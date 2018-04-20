@@ -86,6 +86,10 @@ function ready(error, world, countryData, data) {
 
   // console.log(countries); //countries[0]['years']['2010']["Number of deaths due to tuberculosis, excluding HIV"]
 
+  option = attributeList.append("option");
+  option.text("");
+  option.property("value", "");
+
   attributeKeys = Object.keys(countries[0]['years']['2007']);
   attributeKeys.forEach(function(d) {
     option = attributeList.append("option");
@@ -98,10 +102,56 @@ function ready(error, world, countryData, data) {
      .enter().append("path")
      .attr("class", "land")
      .attr("d", path);
+
+  var attribute = $('#param-attribute').val();
+  var year = $('#param-year').val();
+  var countryID = $('#param-country').val();
+
+  d3.select("#param-attribute").on("change", visualize);
+  d3.select("#param-year").on("change", visualize);
+
+  // Country focus on option select
+  d3.select("#param-country").on("change", function() {
+    var attribute = $('#param-attribute').val();
+    var year = $('#param-year').val();
+    var countryID = $('#param-country').val();
+
+    function country(cnt, sel) {
+       for(var i = 0, l = cnt.length; i < l; i++) {
+         if(cnt[i].id == sel.value) {return cnt[i];}
+       }
+       return -1;
+    };
+
+    var focusedCountry = country(countries, this),
+        p = d3.geo.centroid(focusedCountry);
+
+    svg.selectAll(".focused").classed("focused", focused = false);
+
+    //Globe rotating
+    function transition() {
+      d3.transition()
+        .duration(600)
+        .tween("rotate", function() {
+          var r = d3.interpolate(projection.rotate(), [-p[0], -p[1]]);
+          return function(t) {
+            projection.rotate(r(t));
+            svg.selectAll("path").attr("d", path)
+               .classed("focused", function(d, i) { return d.id == focusedCountry.id ? focused = d : false; });
+          };
+        })
+    };
+
+    if (focusedCountry == -1) $('#progress-time').text(countryById[countryID] + "'s data is missing");
+    else {
+      $('#title').text(countryById[countryID]);
+      $('#progress-time').text("Year: " + year);
+      transition();
+    }
+ });
 };
 
 function visualize() {
-  play = false;
   var attribute = $('#param-attribute').val();
   var year = $('#param-year').val();
   var countryID = $('#param-country').val();
@@ -156,39 +206,6 @@ function visualize() {
      countryTooltip.style("left", (d3.event.pageX + 7) + "px")
      .style("top", (d3.event.pageY - 15) + "px");
    });
-
-   // Country focus on option select
-   d3.select("#param-country").on("change", function() {
-     var countryID = $('#param-country').val();
-     $('#title').text(countryById[countryID]);
-
-      function country(cnt, sel) {
-        for(var i = 0, l = cnt.length; i < l; i++) {
-          if(cnt[i].id == sel.value) {return cnt[i];}
-        }
-      };
-
-     var focusedCountry = country(countries, this),
-         p = d3.geo.centroid(focusedCountry);
-
-     svg.selectAll(".focused").classed("focused", focused = false);
-     console.log(focusedCountry);
-     //Globe rotating
-     function transition() {
-       d3.transition()
-         .duration(1250)
-         .tween("rotate", function() {
-           var r = d3.interpolate(projection.rotate(), [-p[0], -p[1]]);
-           return function(t) {
-             projection.rotate(r(t));
-             svg.selectAll("path").attr("d", path)
-                .classed("focused", function(d, i) { return d.id == focusedCountry.id ? focused = d : false; });
-           };
-         })
-     };
-
-     transition();
-  });
 }
 
 function run() {
@@ -211,7 +228,7 @@ function run() {
 
   svg.selectAll("path")
     .transition()
-    .duration(1000)
+    .duration(800)
     .style("fill", function(d){
      if (Object.keys(d['years']).indexOf(String(year)) >= 0)
        return colorScale(d['years'][String(year)][attribute]);
@@ -238,7 +255,7 @@ function transition() {
   n = countries.length;
   svg.selectAll(".focused").classed("focused", focused = false);
   d3.transition()
-    .duration(1250)
+    .duration(600)
     .each("start", function() {
       title.text(countries[i = (i + 1) % n].name);
     })
@@ -278,8 +295,16 @@ function transition() {
 }
 
 $('#load-button').bind('click', loadDataset);
-$('#visualize-button').bind('click', visualize);
+$('#play-button').bind('click', function() {
+  if (!play) {
+    play = true;
+    $('#play-button').text("Stop");
+    transition();
+  } else {
+    play = false;
+    $('#play-button').html("Play");
+  }
+});
 $('#run-button').bind('click', run);
-$('#play-button').bind('click', transition);
 
 $('#param-year').bind('input', function () { $('#param-year-value').text($('#param-year').val()); });
