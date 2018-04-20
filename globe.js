@@ -1,9 +1,9 @@
 var datasets = ["tubercolusis_from 2007_WHO"];
-var dataset, countries, countryById = {}, timestep = 0, colorScale;
+var dataset, countries, countryById = {}, timestep = 0, colorScale, play = false;
 
 var margin = { top: 20, right: 20, bottom: 20, left: 20 },
     w = 800,
-    h = 700,
+    h = 600,
     width = w - margin.left - margin.right,
     height = h - margin.top - margin.bottom,
     sens = 0.25,
@@ -32,10 +32,9 @@ var countryTooltip = svg.append("div").attr("class", "countryTooltip"),
     countryList = d3.select("#param-country"),
     attributeList = d3.select("#param-attribute");
 
-var title = d3.select("h1");
+var title = d3.select("#embedding-space").append("h1").attr("id", "title");
 
 function loadDataset() {
-  // console.log("loading dataset");
   dataset = datasets[parseInt($('#param-dataset').val())];
   queue()
   .defer(d3.json, "data/world-110m.json")
@@ -56,6 +55,10 @@ function ready(error, world, countryData, data) {
       n = countries.length;
 
   //Adding countries to select
+  option = countryList.append("option");
+  option.text("");
+  option.property("value", "");
+
   countryData.forEach(function(d) {
     countryById[d.id] = d.name;
     option = countryList.append("option");
@@ -81,7 +84,7 @@ function ready(error, world, countryData, data) {
     return a.name.localeCompare(b.name);
   });
 
-  console.log(countries); //countries[0]['years']['2010']["Number of deaths due to tuberculosis, excluding HIV"]
+  // console.log(countries); //countries[0]['years']['2010']["Number of deaths due to tuberculosis, excluding HIV"]
 
   attributeKeys = Object.keys(countries[0]['years']['2007']);
   attributeKeys.forEach(function(d) {
@@ -90,79 +93,36 @@ function ready(error, world, countryData, data) {
     option.property("value", d);
   });
 
-  function transition() {
-    svg.selectAll(".focused").classed("focused", focused = false);
-    d3.transition()
-      .duration(1250)
-      .each("start", function() {
-        title.text(countries[i = (i + 1) % n].name);
-      })
-      .tween("rotate", function() {
-        var p = d3.geo.centroid(countries[i]),
-            r = d3.interpolate(projection.rotate(), [-p[0], -p[1]]);
-            focused_id = countries[i].id;
-        svg.selectAll(".focused").classed("focused", focused = false);
-        return function(t) {
-          projection.rotate(r(t));
-          svg.selectAll("path").attr("d", path)
-             .classed("focused", function(d, i) { return d.id == focused_id ? focused = d : false; });
-        };
-      })
-        // return function(t) {
-        //   c.clearRect(0, 0, width, height);
-        //
-        //   projection.rotate(r(t)).clipAngle(180);
-        //   c.fillStyle = "#dadac4", c.beginPath(), path(land), c.fill();
-        //   c.fillStyle = "#f00", c.beginPath(), path(countries[i]), c.fill();
-        //   c.strokeStyle = "#fff", c.lineWidth = .5, c.beginPath(), path(borders), c.stroke();
-        //   c.strokeStyle = "#000", c.lineWidth = 1, c.beginPath(), path(globe), c.stroke();
-        //   c.strokeStyle = "rgba(0, 0, 0, 0.05)", c.lineWidth = .5, c.beginPath(), path(backGrid), c.stroke();
-        //
-        //   console.log(+data[i]["Number of deaths due to tuberculosis, excluding HIV"].replace(/\s/g, ''))
-        //
-        //   projection.rotate(r(t)).clipAngle(90);
-        //   c.fillStyle = "#737368", c.beginPath(), path(land), c.fill();
-        //   c.fillStyle = "#f00", c.beginPath(), path(countries[i]), c.fill();
-        //   c.fillStyle = colorScale(+data[i]["Number of deaths due to tuberculosis, excluding HIV"].replace(/\s/g, '')), c.beginPath(), path(countries[i]), c.fill();
-        //   c.strokeStyle = "#fff", c.lineWidth = .5, c.beginPath(), path(borders), c.stroke();
-        //   c.strokeStyle = "rgba(0, 0, 0, 0.1)", c.lineWidth = 1, c.beginPath(), path(globe), c.stroke();
-        //   c.strokeStyle = "rgba(0, 0, 0, 0.1)", c.lineWidth = .5, c.beginPath(), path(grid), c.stroke();
-        // };
-      .transition()
-      .each("end", transition);
-  };
-
   svg.selectAll("path.land")
      .data(countries)
      .enter().append("path")
      .attr("class", "land")
      .attr("d", path);
-
-  // transition();
-  function country(cnt, sel) {
-    for(var i = 0, l = cnt.length; i < l; i++) {
-      if(cnt[i].id == sel.value) {return cnt[i];}
-    }
-  };
 };
 
 function visualize() {
+  play = false;
   var attribute = $('#param-attribute').val();
   var year = $('#param-year').val();
-  // console.log(year, attribute);
+  var countryID = $('#param-country').val();
+  $('#progress-time').text("Year: " + year);
 
+  //Setting color scale
   colorScale = d3.scale.quantile()
                  .domain([0, 11, d3.max(countries, function(d){
-                  //  console.log(Object.keys(d['years']));
-                    if (Object.keys(d['years']).indexOf(year) >= 0)
-                     return d['years'][year][attribute];
+                    //  console.log(Object.keys(d['years']));
+                    var years = [];
+                    for (var i = 2007; i <= 2014; i++) {
+                      if (Object.keys(d['years']).indexOf(String(i)) >= 0)
+                        years.push(d['years'][String(i)][attribute]);
+                    }
+                    return Math.max(years);
                  })])
                  .range(colors);
 
   //Drawing countries on the globe
   svg.selectAll("path")
      .style("fill", function(d){
-      // console.log(d['years']['2011']["Number of deaths due to tuberculosis, excluding HIV"]);
       if (Object.keys(d['years']).indexOf(year) >= 0)
         return colorScale(d['years'][year][attribute]);
       else {
@@ -182,13 +142,11 @@ function visualize() {
 
    //Mouse events
    .on("mouseover", function(d) {
-    //  console.log(countryById[d.id]);
      countryTooltip.text(countryById[d.id])
      .style("left", (d3.event.pageX + 7) + "px")
      .style("top", (d3.event.pageY - 15) + "px")
      .style("display", "block")
      .style("opacity", 1);
-    //  console.log(countryTooltip.style("opacity"));
    })
    .on("mouseout", function(d) {
      countryTooltip.style("opacity", 0)
@@ -200,16 +158,25 @@ function visualize() {
    });
 
    // Country focus on option select
-   d3.select("#param-countries").on("change", function() {
+   d3.select("#param-country").on("change", function() {
+     var countryID = $('#param-country').val();
+     $('#title').text(countryById[countryID]);
+
+      function country(cnt, sel) {
+        for(var i = 0, l = cnt.length; i < l; i++) {
+          if(cnt[i].id == sel.value) {return cnt[i];}
+        }
+      };
+
      var focusedCountry = country(countries, this),
          p = d3.geo.centroid(focusedCountry);
 
      svg.selectAll(".focused").classed("focused", focused = false);
-
+     console.log(focusedCountry);
      //Globe rotating
      function transition() {
        d3.transition()
-         .duration(2500)
+         .duration(1250)
          .tween("rotate", function() {
            var r = d3.interpolate(projection.rotate(), [-p[0], -p[1]]);
            return function(t) {
@@ -225,27 +192,14 @@ function visualize() {
 }
 
 function run() {
-  console.log(2007+timestep);
+  var year = 2007 + timestep;
   var attribute = $('#param-attribute').val();
   var speed = parseInt($('#param-speed').val());
-
-  // Setting color scale
-  // colorScale = d3.scale.quantile()
-  //                .domain([0, 11, d3.max(countries, function(d){
-  //                   //  console.log(Object.keys(d['years']));
-  //                   var years = [];
-  //                   for (var i = 2007; i <= 2014; i++) {
-  //                     if (Object.keys(d['years']).indexOf(String(i)) >= 0)
-  //                       years.push(d['years'][String(i)][attribute]);
-  //                   }
-  //                   return Math.max(years);
-  //                })])
-  //                .range(colors);
+  $('#progress-time').text("Year: " + year);
 
   //Setting color scale
   colorScale = d3.scale.quantile()
                  .domain([0, 11, d3.max(countries, function(d){
-                    //  console.log(Object.keys(d['years']));
                     var years = [];
                     for (var i = 2007; i <= 2014; i++) {
                       if (Object.keys(d['years']).indexOf(String(i)) >= 0)
@@ -259,9 +213,8 @@ function run() {
     .transition()
     .duration(1000)
     .style("fill", function(d){
-     // console.log(d['years']['2011']["Number of deaths due to tuberculosis, excluding HIV"]);
-     if (Object.keys(d['years']).indexOf(String(2007+timestep)) >= 0)
-       return colorScale(d['years'][String(2007+timestep)][attribute]);
+     if (Object.keys(d['years']).indexOf(String(year)) >= 0)
+       return colorScale(d['years'][String(year)][attribute]);
      else {
        return '#000000';
      }
@@ -271,12 +224,62 @@ function run() {
     timestep = 0;
     return;
   };
-  window.setTimeout(run, 1000);
+  window.setTimeout(run, 800);
+}
+
+var i = -1;
+
+function transition() {
+  if (i == -1) play = true;
+  if (!play) {
+    i = -1;
+    return;
+  }
+  n = countries.length;
+  svg.selectAll(".focused").classed("focused", focused = false);
+  d3.transition()
+    .duration(1250)
+    .each("start", function() {
+      title.text(countries[i = (i + 1) % n].name);
+    })
+    .tween("rotate", function() {
+      var p = d3.geo.centroid(countries[i]),
+          r = d3.interpolate(projection.rotate(), [-p[0], -p[1]]);
+          focused_id = countries[i].id;
+      svg.selectAll(".focused").classed("focused", focused = false);
+      return function(t) {
+        projection.rotate(r(t));
+        svg.selectAll("path").attr("d", path)
+           .classed("focused", function(d, i) { return d.id == focused_id ? focused = d : false; });
+      };
+    })
+      // return function(t) {
+      //   c.clearRect(0, 0, width, height);
+      //
+      //   projection.rotate(r(t)).clipAngle(180);
+      //   c.fillStyle = "#dadac4", c.beginPath(), path(land), c.fill();
+      //   c.fillStyle = "#f00", c.beginPath(), path(countries[i]), c.fill();
+      //   c.strokeStyle = "#fff", c.lineWidth = .5, c.beginPath(), path(borders), c.stroke();
+      //   c.strokeStyle = "#000", c.lineWidth = 1, c.beginPath(), path(globe), c.stroke();
+      //   c.strokeStyle = "rgba(0, 0, 0, 0.05)", c.lineWidth = .5, c.beginPath(), path(backGrid), c.stroke();
+      //
+      //   console.log(+data[i]["Number of deaths due to tuberculosis, excluding HIV"].replace(/\s/g, ''))
+      //
+      //   projection.rotate(r(t)).clipAngle(90);
+      //   c.fillStyle = "#737368", c.beginPath(), path(land), c.fill();
+      //   c.fillStyle = "#f00", c.beginPath(), path(countries[i]), c.fill();
+      //   c.fillStyle = colorScale(+data[i]["Number of deaths due to tuberculosis, excluding HIV"].replace(/\s/g, '')), c.beginPath(), path(countries[i]), c.fill();
+      //   c.strokeStyle = "#fff", c.lineWidth = .5, c.beginPath(), path(borders), c.stroke();
+      //   c.strokeStyle = "rgba(0, 0, 0, 0.1)", c.lineWidth = 1, c.beginPath(), path(globe), c.stroke();
+      //   c.strokeStyle = "rgba(0, 0, 0, 0.1)", c.lineWidth = .5, c.beginPath(), path(grid), c.stroke();
+      // };
+    .transition()
+    .each("end", transition);
 }
 
 $('#load-button').bind('click', loadDataset);
 $('#visualize-button').bind('click', visualize);
 $('#run-button').bind('click', run);
+$('#play-button').bind('click', transition);
 
 $('#param-year').bind('input', function () { $('#param-year-value').text($('#param-year').val()); });
-// $('#param-speed').bind('input', function () { $('#param-speed-value').text($('#param-speed').val()); });

@@ -12,8 +12,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js"></script>
 </head>
 
-<h1></h1>
-
 <body>
   <div class="container">
     <div class="title"><span data-sr="enter top over 2s and move 30px">Infectious Disease Spreading Pattern</span><br><span class="subtitle" data-sr="enter bottom over 2s and move 10px">Authors: Guanzhi WANG, Ji LIU, Jiayi YE, Qinhan LIU, Zhihong CHEN</span></div>
@@ -31,24 +29,24 @@
           <select id="param-attribute" name="param-attribute"></select>
           <output for="param-attribute" id="param-attribute-value"></output>
         </div>
-        <!-- <div class="param">
+        <div class="param">
           <label for="param-country">Country</label>
           <select id="param-country" name="param-country"></select>
           <output for="param-country" id="param-country-value"></output>
-        </div> -->
+        </div>
         <div class="param">
           <label for="param-year">Year</label>
           <input id="param-year" type="range" min="2007" max="2014" value="2007", step="1">
           <output for="param-year" id="param-year-value">2007</output>
         </div>
-        <!-- <div class="param">
-          <label for="param-speed">Run Speed</label>
-          <input id="param-speed" type="range" min="1" max="10" value="5", step="1">
-          <output for="param-speed" id="param-speed-value">5</output>
-        </div> -->
+
+        <div id="progress">
+          <div><span id="progress-time"></span></div>
+        </div>
 
         <div id="load-button">Load Dataset</div>
         <div id="visualize-button">Visualize</div>
+        <div id="play-button">Play</div>
         <div id="run-button">Run Timeline</div>
 
       </div>
