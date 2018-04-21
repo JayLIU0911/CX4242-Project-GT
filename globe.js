@@ -114,7 +114,8 @@ function ready(error, world, countryData, data) {
      .data(countries)
      .enter().append("path")
      .attr("class", "land")
-     .attr("d", path);
+     .attr("d", path)
+     .attr("transform", "translate(" + -100 + "," + 0 + ")");
 
   var attribute = $('#param-attribute').val();
   var year = $('#param-year').val();
@@ -164,6 +165,21 @@ function ready(error, world, countryData, data) {
  });
 };
 
+function numFormatter(num) {
+    if (num > 999){
+      return (num/1000).toFixed(0) + 'k';
+    }
+    else if (num > 1){
+      return Math.round(num);
+    }
+    else if (num == 0.0){
+      return 0;
+    }
+    else{
+      return num.toFixed(3)
+    }
+}
+
 function visualize() {
   var attribute = $('#param-attribute').val();
   var year = $('#param-year').val();
@@ -179,9 +195,45 @@ function visualize() {
                       if (Object.keys(d['years']).indexOf(String(i)) >= 0)
                         years.push(d['years'][String(i)][attribute]);
                     }
-                    return Math.max(years);
+                    return Math.max(...years);
                  })])
                  .range(colors);
+
+  svg.selectAll(".legend").remove();
+
+  var legend = svg.append("g")
+          .attr("class", "legend")
+          .attr("transform", "translate(" + 0 + "," + 0 + ")");
+
+  var legend_size = 50
+  legend.selectAll("rect")
+      .data(colors)
+      .enter()
+      .append("rect")
+        .attr("x", 700)
+        .attr("y", function(d,i){return i*legend_size;})
+        .attr("width", legend_size/3)
+        .attr("height", legend_size)
+        .style("fill", function(d,i){return colors[i];})
+        .style("stroke", "#000");
+
+    var legend_text = [0].concat(colorScale.quantiles());
+    console.log(legend_text)
+    legend.selectAll("text")
+        .data(legend_text)
+        .enter()
+        .append("text")
+        .attr("x", 725)
+        .attr("y", function(d,i){return i*legend_size;})
+        .attr("dy","0.35em")
+        .text(function (d) { return numFormatter(d); })
+        .style("text-anchor", "start")
+        .style("fill", 'white');
+
+      // legend.append("text")
+      //   .text("Number of Appearances")
+      //   .style("stroke", "#000")
+      //   .style("text-anchor", "start");
 
   //Drawing countries on the globe
   svg.selectAll("path")
@@ -235,7 +287,7 @@ function run() {
                       if (Object.keys(d['years']).indexOf(String(i)) >= 0)
                         years.push(d['years'][String(i)][attribute]);
                     }
-                    return Math.max(years);
+                    return Math.max(...years);
                  })])
                  .range(colors);
 
