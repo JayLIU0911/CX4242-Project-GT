@@ -1,4 +1,17 @@
+var datasetList = d3.select("#param-dataset");
+var option = datasetList.append("option");
+option.text("");
+option.property("value", "");
+
 var datasets = ["tubercolusis_from 2007_WHO"];
+datasets.forEach(function(d) {
+  option = datasetList.append("option");
+  option.text(d);
+  option.property("value", d);
+});
+
+datasetList.on("change", loadDataset);
+
 var dataset, countries, countryById = {}, timestep = 0, colorScale, play = false;
 
 var margin = { top: 20, right: 20, bottom: 20, left: 20 },
@@ -35,7 +48,7 @@ var countryTooltip = svg.append("div").attr("class", "countryTooltip"),
 var title = d3.select("#embedding-space").append("h1").attr("id", "title");
 
 function loadDataset() {
-  dataset = datasets[parseInt($('#param-dataset').val())];
+  dataset = $('#param-dataset').val();
   queue()
   .defer(d3.json, "data/world-110m.json")
   .defer(d3.tsv, "data/world-110m-country-names.tsv")
@@ -294,7 +307,6 @@ function transition() {
     .each("end", transition);
 }
 
-$('#load-button').bind('click', loadDataset);
 $('#play-button').bind('click', function() {
   if (!play) {
     play = true;
