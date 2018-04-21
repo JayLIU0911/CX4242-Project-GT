@@ -184,6 +184,11 @@ body {
   fill: #f00;
 }
 
+path.focused {
+  stroke:#33CC33;
+  stroke-width: 6px;
+}
+
 /*select {
   position: absolute;
   top: 20px;
@@ -195,12 +200,12 @@ body {
 
 h1 {
   position: absolute;
-  color: #33CC33;
+  color: #FFFFFF;
   top: 500px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 18px;
   text-align: center;
-  width: 900px;
+  width: 600px;
 }
 
 .countryTooltip {

@@ -335,26 +335,6 @@ function transition() {
            .classed("focused", function(d, i) { return d.id == focused_id ? focused = d : false; });
       };
     })
-      // return function(t) {
-      //   c.clearRect(0, 0, width, height);
-      //
-      //   projection.rotate(r(t)).clipAngle(180);
-      //   c.fillStyle = "#dadac4", c.beginPath(), path(land), c.fill();
-      //   c.fillStyle = "#f00", c.beginPath(), path(countries[i]), c.fill();
-      //   c.strokeStyle = "#fff", c.lineWidth = .5, c.beginPath(), path(borders), c.stroke();
-      //   c.strokeStyle = "#000", c.lineWidth = 1, c.beginPath(), path(globe), c.stroke();
-      //   c.strokeStyle = "rgba(0, 0, 0, 0.05)", c.lineWidth = .5, c.beginPath(), path(backGrid), c.stroke();
-      //
-      //   console.log(+data[i]["Number of deaths due to tuberculosis, excluding HIV"].replace(/\s/g, ''))
-      //
-      //   projection.rotate(r(t)).clipAngle(90);
-      //   c.fillStyle = "#737368", c.beginPath(), path(land), c.fill();
-      //   c.fillStyle = "#f00", c.beginPath(), path(countries[i]), c.fill();
-      //   c.fillStyle = colorScale(+data[i]["Number of deaths due to tuberculosis, excluding HIV"].replace(/\s/g, '')), c.beginPath(), path(countries[i]), c.fill();
-      //   c.strokeStyle = "#fff", c.lineWidth = .5, c.beginPath(), path(borders), c.stroke();
-      //   c.strokeStyle = "rgba(0, 0, 0, 0.1)", c.lineWidth = 1, c.beginPath(), path(globe), c.stroke();
-      //   c.strokeStyle = "rgba(0, 0, 0, 0.1)", c.lineWidth = .5, c.beginPath(), path(grid), c.stroke();
-      // };
     .transition()
     .each("end", transition);
 }
