@@ -163,6 +163,7 @@ function ready(error, world, countryData, data) {
       transition();
     }
  });
+console.log(document.getElementById('param-year').min=20);
 };
 
 function numFormatter(num) {
