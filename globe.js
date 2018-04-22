@@ -211,10 +211,10 @@ function visualize() {
       .data(colors)
       .enter()
       .append("rect")
-        .attr("x", 700)
-        .attr("y", function(d,i){return i*legend_size;})
+        .attr("x", 650)
+        .attr("y", function(d,i){return i*(legend_size/2);})
         .attr("width", legend_size/3)
-        .attr("height", legend_size)
+        .attr("height", legend_size/2)
         .style("fill", function(d,i){return colors[i];})
         .style("stroke", "#000");
 
@@ -224,9 +224,10 @@ function visualize() {
         .data(legend_text)
         .enter()
         .append("text")
-        .attr("x", 725)
-        .attr("y", function(d,i){return i*legend_size;})
+        .attr("x", 675)
+        .attr("y", function(d,i){return i*(legend_size/2);})
         .attr("dy","0.35em")
+        .attr("font-size", "13px")
         .text(function (d) { return numFormatter(d); })
         .style("text-anchor", "start")
         .style("fill", 'white');
