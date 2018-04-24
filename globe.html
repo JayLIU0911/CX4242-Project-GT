@@ -5,10 +5,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="http://d3js.org/d3.v3.min.js"></script>
-  <script src="http://d3js.org/topojson.v1.min.js"></script>
-  <script src="http://d3js.org/queue.v1.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js"></script>
+  <script src="lib/d3.v3.min.js"></script>
+  <script src="lib/jquery.min.js"></script>
+  <script src="lib/queue.v1.min.js"></script>
+  <script src="lib/topojson.v1.min.js"></script>
 </head>
 
 <body>
@@ -32,9 +32,9 @@
           <output for="param-country" id="param-country-value"></output>
         </div>
         <div class="param">
-          <label for="param-year">Year</label>
-          <input id="param-year" type="range" min="2007" max="2014" value="2007", step="1">
-          <output for="param-year" id="param-year-value">2007</output>
+          <label for="param-time">Timeline</label>
+          <input id="param-time" type="range" min="0" value="0" step="1">
+          <output for="param-time" id="param-time-value"></output>
         </div>
 
         <div id="progress">

@@ -3,7 +3,7 @@ var option = datasetList.append("option");
 option.text("");
 option.property("value", "");
 
-var datasets = ["tubercolusis_from 2007_WHO"];
+var datasets = ["tubercolusis_from 2007_WHO", "google_flu", "google_dengue"];
 datasets.forEach(function(d) {
   option = datasetList.append("option");
   option.text(d);
@@ -12,7 +12,7 @@ datasets.forEach(function(d) {
 
 datasetList.on("change", loadDataset);
 
-var dataset, countries, countryById = {}, timestep = 0, colorScale, play = false;
+var dataset, countries, countryById = {}, timestep = 0, colorScale, play = false, stopRun = true, timeLine = [], mapping = {};
 
 var margin = { top: 20, right: 20, bottom: 20, left: 20 },
     w = 800,
@@ -46,20 +46,53 @@ var countryTooltip = svg.append("div").attr("class", "countryTooltip"),
     attributeList = d3.select("#param-attribute");
 
 var title = d3.select("#embedding-space").append("h1").attr("id", "title");
+var timeList = d3.select("#param-time");
+
+function updateTime() {
+  timeLine = [];
+  var attr = $('#param-attribute').val();
+  Object.keys(countries[0]['time']).forEach(function(d) {
+    if (Object.keys(countries[0]['time'][d]).indexOf(attr) >= 0) timeLine.push(d);
+  })
+  document.getElementById('param-time').max = timeLine.length - 1;
+}
+
+function displayTime(time) {
+  var d = $('#param-dataset').val();
+  var attr = $('#param-attribute').val();
+  if (d == datasets[0]) return "Year: " + time;
+  return mapping[attr.split(" ")[attr.split(" ").length-1]][time];
+}
+
+function clearSelects() {
+  $('#param-attribute')
+    .find('option')
+    .remove()
+    .end();
+
+  $('#param-country')
+    .find('option')
+    .remove()
+    .end();
+}
 
 function loadDataset() {
+  clearSelects();
   dataset = $('#param-dataset').val();
+
   queue()
-  .defer(d3.json, "data/world-110m.json")
-  .defer(d3.tsv, "data/world-110m-country-names.tsv")
-  .defer(d3.json, "data/" + dataset + ".json")
-  .await(ready);
+    .defer(d3.json, "data/world-110m.json")
+    .defer(d3.tsv, "data/world-110m-country-names.tsv")
+    .defer(d3.json, "data/" + dataset + ".json")
+    .defer(d3.json, "data/date.json")
+    .await(ready);
 }
 
 //Main function
-function ready(error, world, countryData, data) {
+function ready(error, world, countryData, data, time) {
   if (error) throw error;
 
+  mapping = time;
   var countryInfo = Object.values(data['countries'])
 
   countries = topojson.feature(world, world.objects.countries).features;
@@ -91,25 +124,26 @@ function ready(error, world, countryData, data) {
   // Setting country information
   countries = countries.filter(function(d) {
     return countryInfo.some(function(n) {
-      if (d.id == n.id) return d.years = n.years;
+      if (d.id == n.id) return d.time = n.time;
     });
   }).sort(function(a, b) {
     return a.name.localeCompare(b.name);
   });
 
-  // console.log(countries); //countries[0]['years']['2010']["Number of deaths due to tuberculosis, excluding HIV"]
+  // console.log(countries); //countries[0]['time']['2010']["Number of deaths due to tuberculosis, excluding HIV"]
 
   option = attributeList.append("option");
   option.text("");
   option.property("value", "");
 
-  attributeKeys = Object.keys(countries[0]['years']['2007']);
+  attributeKeys = Object.keys(countries[0]['time'][Object.keys(countries[0]['time'])[0]]);
   attributeKeys.forEach(function(d) {
     option = attributeList.append("option");
     option.text(d);
     option.property("value", d);
   });
 
+  svg.selectAll("path.land").remove();
   svg.selectAll("path.land")
      .data(countries)
      .enter().append("path")
@@ -118,16 +152,19 @@ function ready(error, world, countryData, data) {
      .attr("transform", "translate(" + -100 + "," + 0 + ")");
 
   var attribute = $('#param-attribute').val();
-  var year = $('#param-year').val();
+  var time = timeLine[$('#param-time').val()];
   var countryID = $('#param-country').val();
 
-  d3.select("#param-attribute").on("change", visualize);
-  d3.select("#param-year").on("change", visualize);
+  d3.select("#param-attribute").on("change", function() {
+    d3.select("#param-time").on("change", visualize);
+    updateTime();
+    visualize();
+  });
 
   // Country focus on option select
   d3.select("#param-country").on("change", function() {
     var attribute = $('#param-attribute').val();
-    var year = $('#param-year').val();
+    var time = timeLine[$('#param-time').val()];
     var countryID = $('#param-country').val();
 
     function country(cnt, sel) {
@@ -159,11 +196,10 @@ function ready(error, world, countryData, data) {
     if (focusedCountry == -1) $('#progress-time').text(countryById[countryID] + "'s data is missing");
     else {
       $('#title').text(countryById[countryID]);
-      $('#progress-time').text("Year: " + year);
+      $('#progress-time').text(displayTime(time));
       transition();
     }
  });
-console.log(document.getElementById('param-year').min=20);
 };
 
 function numFormatter(num) {
@@ -177,26 +213,26 @@ function numFormatter(num) {
       return 0;
     }
     else{
-      return num.toFixed(3)
+      return num.toFixed(3);
     }
 }
 
 function visualize() {
   var attribute = $('#param-attribute').val();
-  var year = $('#param-year').val();
+  var time = timeLine[$('#param-time').val()];
   var countryID = $('#param-country').val();
-  $('#progress-time').text("Year: " + year);
+  $('#progress-time').text(displayTime(time));
 
   //Setting color scale
   colorScale = d3.scale.quantile()
                  .domain([0, 11, d3.max(countries, function(d){
-                    //  console.log(Object.keys(d['years']));
-                    var years = [];
-                    for (var i = 2007; i <= 2014; i++) {
-                      if (Object.keys(d['years']).indexOf(String(i)) >= 0)
-                        years.push(d['years'][String(i)][attribute]);
-                    }
-                    return Math.max(...years);
+                    //  console.log(Object.keys(d['time']));
+                    var time = [];
+                    timeLine.forEach(function(i) {
+                      if (Object.keys(d['time']).indexOf(String(i)) >= 0)
+                        time.push(d['time'][i][attribute]);
+                    });
+                    return Math.max(...time);
                  })])
                  .range(colors);
 
@@ -206,7 +242,7 @@ function visualize() {
           .attr("class", "legend")
           .attr("transform", "translate(" + 0 + "," + 0 + ")");
 
-  var legend_size = 50
+  var legend_size = 50;
   legend.selectAll("rect")
       .data(colors)
       .enter()
@@ -219,7 +255,7 @@ function visualize() {
         .style("stroke", "#000");
 
     var legend_text = [0].concat(colorScale.quantiles());
-    console.log(legend_text)
+    // console.log(legend_text)
     legend.selectAll("text")
         .data(legend_text)
         .enter()
@@ -240,10 +276,10 @@ function visualize() {
   //Drawing countries on the globe
   svg.selectAll("path")
      .style("fill", function(d){
-      if (Object.keys(d['years']).indexOf(year) >= 0)
-        return colorScale(d['years'][year][attribute]);
+      if (Object.keys(d['time']).indexOf(time) >= 0)
+        return colorScale(d['time'][time][attribute]);
       else {
-        return '#000000';
+        return '#A98B6F';
       }
      })
 
@@ -258,53 +294,41 @@ function visualize() {
      }))
 
    //Mouse events
-   .on("mouseover", function(d) {
-     countryTooltip.text(countryById[d.id])
-     .style("left", (d3.event.pageX + 7) + "px")
-     .style("top", (d3.event.pageY - 15) + "px")
-     .style("display", "block")
-     .style("opacity", 1);
-   })
-   .on("mouseout", function(d) {
-     countryTooltip.style("opacity", 0)
-     .style("display", "none");
-   })
-   .on("mousemove", function(d) {
-     countryTooltip.style("left", (d3.event.pageX + 7) + "px")
-     .style("top", (d3.event.pageY - 15) + "px");
-   });
+  //  .on("mouseover", function(d) {
+  //    countryTooltip.text(countryById[d.id])
+  //    .style("left", (d3.event.pageX + 7) + "px")
+  //    .style("top", (d3.event.pageY - 15) + "px")
+  //    .style("display", "block")
+  //    .style("opacity", 1);
+  //  })
+  //  .on("mouseout", function(d) {
+  //    countryTooltip.style("opacity", 0)
+  //    .style("display", "none");
+  //  })
+  //  .on("mousemove", function(d) {
+  //    countryTooltip.style("left", (d3.event.pageX + 7) + "px")
+  //    .style("top", (d3.event.pageY - 15) + "px");
+  //  });
 }
 
 function run() {
-  var year = 2007 + timestep;
+  var time = timeLine[Number($('#param-time').val()) + timestep];
   var attribute = $('#param-attribute').val();
   var speed = parseInt($('#param-speed').val());
-  $('#progress-time').text("Year: " + year);
-
-  //Setting color scale
-  colorScale = d3.scale.quantile()
-                 .domain([0, 11, d3.max(countries, function(d){
-                    var years = [];
-                    for (var i = 2007; i <= 2014; i++) {
-                      if (Object.keys(d['years']).indexOf(String(i)) >= 0)
-                        years.push(d['years'][String(i)][attribute]);
-                    }
-                    return Math.max(...years);
-                 })])
-                 .range(colors);
+  $('#progress-time').text(displayTime(time));
 
   svg.selectAll("path")
     .transition()
     .duration(800)
     .style("fill", function(d){
-     if (Object.keys(d['years']).indexOf(String(year)) >= 0)
-       return colorScale(d['years'][String(year)][attribute]);
+     if (Object.keys(d['time']).indexOf(time) >= 0)
+       return colorScale(d['time'][time][attribute]);
      else {
-       return '#000000';
+       return '#A98B6F';
      }
     });
   timestep++;
-  if (timestep > 7) {
+  if (stopRun || timestep > timeLine.length - Number($('#param-time').val()) - 1) {
     timestep = 0;
     return;
   };
@@ -351,6 +375,7 @@ $('#play-button').bind('click', function() {
     $('#play-button').html("Play");
   }
 });
-$('#run-button').bind('click', run);
-
-$('#param-year').bind('input', function () { $('#param-year-value').text($('#param-year').val()); });
+$('#run-button').bind('click', function() {
+  stopRun = !stopRun;
+  run();
+});
