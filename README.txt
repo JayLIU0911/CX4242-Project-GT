@@ -7,7 +7,7 @@ DESCRIPTION:
 		data_cleaning_kaggle:
 			This jupyter notebook file converts Kaggle TB data from csv file to json file.
 		date_mapping.ipynb:
-			This jupyter notebook file constructs a mapping from year and week to their corresponding date for Google Dengue data and Google FLu data.
+			This jupyter notebook file constructs a mapping from year and week to their corresponding date for Google Dengue data and Google Flu data.
 		index.html:
 			The main html file for visualization.
 		globe.js:
@@ -34,10 +34,10 @@ EXECUTION:
 	Step1: select the dataset from the selection list under Dataset section.
 	Step2: select the attribute from the selection list under Attribute section.
 	Step2: select the country from the selection list under Country section.
-	Step3: spin the globe using mouse.
+	Step3: drag and spin the globe using mouse.
 	Step4: click on the "Play" button to make the globe rotate automatically.
 	Step5: click on the "Stop" button to stop rotation.
-	Step6: click on the "Run Timeline" button such that the colors of countries will be updated according to the timeline.
+	Step6: click on the "Run Timeline" button so that the colors of countries will be updated according to the timeline.
 
 
 			
