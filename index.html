@@ -1,127 +1,53 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
+  <title>Earth Globe</title>
   <meta charset="utf-8" />
-  <script src="https://d3js.org/d3.v3.js"></script>
-  <script src="http://d3js.org/topojson.v1.min.js"></script>
-  <script src="http://d3js.org/queue.v1.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="lib/d3.v3.min.js"></script>
+  <script src="lib/jquery.min.js"></script>
+  <script src="lib/queue.v1.min.js"></script>
+  <script src="lib/topojson.v1.min.js"></script>
 </head>
 
-<style>
-  h1 {
-    position: absolute;
-    top: 350px;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 18px;
-    text-align: center;
-    width: 600px;
-  }
-</style>
-<h1></h1>
 <body>
-  <script type="text/javascript">
+  <div class="container">
+    <div class="title"><span data-sr="enter top over 2s and move 30px">Infectious Disease Spreading Pattern</span><br><span class="subtitle" data-sr="enter bottom over 2s and move 10px">Authors: Guanzhi WANG, Ji LIU, Jiayi YE, Qinhan LIU, Zhihong CHEN</span></div>
+    <div class="panel">
+      <div id="control-panel">
+        <div class="param">
+          <label for="param-dataset">Dataset</label>
+          <select id="param-dataset" name="param-dataset"></select>
+          <output for="param-dataset" id="param-dataset-value"></output>
+        </div>
+        <div class="param">
+          <label for="param-attribute">Attribute</label>
+          <select id="param-attribute" name="param-attribute"></select>
+          <output for="param-attribute" id="param-attribute-value"></output>
+        </div>
+        <div class="param">
+          <label for="param-country">Country</label>
+          <select id="param-country" name="param-country"></select>
+          <output for="param-country" id="param-country-value"></output>
+        </div>
+        <div class="param">
+          <label for="param-time">Timeline</label>
+          <input id="param-time" type="range" min="0" value="0" step="1">
+          <output for="param-time" id="param-time-value"></output>
+        </div>
 
-    var width = 600,
-        height = 600;
+        <div id="progress">
+          <div><span id="progress-time"></span></div>
+        </div>
 
-    // gird or structure of the globe
-    var graticule = d3.geo.graticule();
+        <div id="play-button">Play</div>
+        <div id="run-button">Run Timeline</div>
 
-    var backGrid = graticule();
-    var grid = graticule();
-
-    var globe = {type: "Sphere"};
-
-    var projection = d3.geo.orthographic()
-                       .scale(height / 2.1)
-                       .translate([width / 2, height / 2])
-                       .precision(0.6);
-
-    var thresholds = [10000, 11000, 12000, 13000, 14000, 15000],
-        colors = ["#ffffd4","#fee391","#fec44f","#fe9929","#ec7014","#cc4c02","#8c2d04"],
-        colorScale = d3.scale.threshold().domain(thresholds).range(colors);
-
-    var canvas = d3.select("body").append("canvas")
-                   .attr("width", width)
-                   .attr("height", height);
-
-    var c = canvas.node().getContext("2d");
-
-    var path = d3.geo.path()
-                 .projection(projection)
-                 .context(c);
-
-    var title = d3.select("h1");
-
-    queue()
-        .defer(d3.json, "world-110m.json")
-        .defer(d3.tsv, "world-110m-country-names.tsv")
-        .defer(d3.csv, "data/tubercolusis_from 2007_WHO.csv")
-        .await(ready);
-
-    function ready(error, world, names, data) {
-      if (error) throw error;
-
-      var land = topojson.feature(world, world.objects.land),
-          countries = topojson.feature(world, world.objects.countries).features,
-          borders = topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }),
-          i = -1,
-          n = countries.length;
-
-      // set country names
-      countries = countries.filter(function(d) {
-        return names.some(function(n) {
-          if (d.id == n.id) return d.name = n.name;
-        });
-      }).sort(function(a, b) {
-        return a.name.localeCompare(b.name);
-      });
-
-      console.log(countries)
-      console.log(data)
-
-      function transition() {
-        d3.transition()
-          .duration(1250)
-          .each("start", function() {
-            title.text(countries[i = (i + 1) % n].name);
-          })
-          .tween("rotate", function() {
-            var p = d3.geo.centroid(countries[i]),
-                r = d3.interpolate(projection.rotate(), [-p[0], -p[1]]);
-            return function(t) {
-              c.clearRect(0, 0, width, height);
-
-              projection.rotate(r(t)).clipAngle(180);
-              c.fillStyle = "#dadac4", c.beginPath(), path(land), c.fill();
-              c.fillStyle = "#f00", c.beginPath(), path(countries[i]), c.fill();
-              c.strokeStyle = "#fff", c.lineWidth = .5, c.beginPath(), path(borders), c.stroke();
-              c.strokeStyle = "#000", c.lineWidth = 1, c.beginPath(), path(globe), c.stroke();
-              c.strokeStyle = "rgba(0, 0, 0, 0.05)", c.lineWidth = .5, c.beginPath(), path(backGrid), c.stroke();
-
-              console.log(+data[i]["Number of deaths due to tuberculosis, excluding HIV"].replace(/\s/g, ''))
-
-              projection.rotate(r(t)).clipAngle(90);
-              c.fillStyle = "#737368", c.beginPath(), path(land), c.fill();
-              c.fillStyle = "#f00", c.beginPath(), path(countries[i]), c.fill();
-              c.fillStyle = colorScale(+data[i]["Number of deaths due to tuberculosis, excluding HIV"].replace(/\s/g, '')), c.beginPath(), path(countries[i]), c.fill();
-              c.strokeStyle = "#fff", c.lineWidth = .5, c.beginPath(), path(borders), c.stroke();
-              c.strokeStyle = "rgba(0, 0, 0, 0.1)", c.lineWidth = 1, c.beginPath(), path(globe), c.stroke();
-              c.strokeStyle = "rgba(0, 0, 0, 0.1)", c.lineWidth = .5, c.beginPath(), path(grid), c.stroke();
-            };
-          })
-          .transition()
-          .each("end", transition);
-      }
-
-      transition();
-    };
-
-    d3.select(self.frameElement).style("height", height + "px");
-
-
-  </script>
+      </div>
+      <div id="embedding-space" data-sr="fade in over 5s"></div>
+    </div>
+  </div>
 </body>
-
-
+<script src="globe.js"></script>
 </html>
