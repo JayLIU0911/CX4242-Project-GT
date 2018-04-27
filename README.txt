@@ -22,7 +22,9 @@ DESCRIPTION:
 		It contains all the javescript libraries we referenced in index.html
 		./predict:
 		It contains all the python scripts and results we got for the prediction part.
-
+		All txt files are from the results of evaluate.py and model.py.
+			
+			
 
 INSTALLATION:
 	To run .ipynb file, you need to install jupyter notebook under python3 kernel.
@@ -31,6 +33,7 @@ INSTALLATION:
 
 
 EXECUTION:
+	Part 1, D3 Visualization:
 	Step1: select the dataset from the selection list under Dataset section.
 	Step2: select the attribute from the selection list under Attribute section.
 	Step2: select the country from the selection list under Country section.
@@ -38,6 +41,10 @@ EXECUTION:
 	Step4: click on the "Play" button to make the globe rotate automatically.
 	Step5: click on the "Stop" button to stop rotation.
 	Step6: click on the "Run Timeline" button so that the colors of countries will be updated according to the timeline.
+	
+	Part 2, Prediction:
+	Step1: open predict folder
+	Step2: run evaluate.py to get the desired results in result.txt by calling command: python evaluate.py
 
 
 			
